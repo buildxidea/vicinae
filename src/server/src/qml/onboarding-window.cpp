@@ -31,8 +31,6 @@ namespace {
 
 constexpr int ONBOARDING_VERSION = 1;
 
-bool s_freshInstall = false;
-
 std::filesystem::path stateFilePath() { return Omnicast::stateDir() / "onboarding.json"; }
 
 int completedVersion() {
@@ -46,18 +44,11 @@ int completedVersion() {
 
 OnboardingWindow::OnboardingWindow(ApplicationContext &ctx, QObject *parent) : QObject(parent), m_ctx(ctx) {}
 
-void OnboardingWindow::captureFreshInstall() {
-  s_freshInstall = !std::filesystem::exists(Omnicast::dataDir() / "vicinae.db");
-}
-
 bool OnboardingWindow::shouldShow() {
-#if !defined(ENABLE_ONBOARDING)
-  return false;
-#elif defined(Q_OS_MACOS)
+#ifdef ENABLE_ONBOARDING
   return completedVersion() < ONBOARDING_VERSION;
 #else
-  // temporary: skip installs predating non-macOS onboarding; revert to the macOS check once rolled out
-  return s_freshInstall && completedVersion() < ONBOARDING_VERSION;
+  return false;
 #endif
 }
 
@@ -106,7 +97,11 @@ void OnboardingWindow::ensureInitialized() {
   m_initialized = true;
 
   m_themeBridge = new ThemeBridge(this);
+#ifdef Q_OS_WIN
+  m_configBridge = new ConfigBridge(ConfigBridge::OpaqueSurfaces, this);
+#else
   m_configBridge = new ConfigBridge(this);
+#endif
   m_imgSource = new ImageSource(this);
   m_keyboardBridge = new KeyboardBridge(this);
   m_globalShortcutBridge = new GlobalShortcutBridge(this);

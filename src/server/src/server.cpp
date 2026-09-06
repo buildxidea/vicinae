@@ -245,7 +245,6 @@ int startServer(const ServerLaunchOptions &launchOpts) {
   QQuickStyle::setStyle(QStringLiteral("Basic"));
 
   Omnicast::ensureDirectories();
-  OnboardingWindow::captureFreshInstall();
 
 #ifdef Q_OS_WIN
   WindowsNotificationClient::registerAppIdentity();
